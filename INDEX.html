@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NRT Company Ltd — Pending Pickup Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#050E1A;--navy2:#0a1929;--gold:#C9A84C;--gold2:#e8c76a;
+  --red:#e63946;--orange:#f4a261;--yellow:#f9c74f;--green:#2dc653;
+  --white:#ffffff;--gray:#8896a8;--card:#0d1f35;--border:#1a3050;
+}
+body{background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh}
+/* TOPBAR */
+.topbar{background:var(--navy2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.brand{display:flex;flex-direction:column}
+.brand-name{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--gold);letter-spacing:.5px}
+.brand-sub{font-size:11px;color:var(--gray)}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;margin-right:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sync-label{font-size:11px;color:var(--gray);display:flex;align-items:center}
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold2)}
+.btn-outline{background:transparent;color:var(--gold);border:1.5px solid var(--gold)}.btn-outline:hover{background:var(--gold);color:var(--navy)}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:6px}
+.btn-success{background:var(--green);color:var(--navy)}.btn-success:hover{opacity:.85}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-gray{background:var(--border);color:var(--gray)}.btn-gray:hover{background:#243a57}
+/* MAIN */
+.main{max-width:1200px;margin:0 auto;padding:28px 20px}
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+@media(max-width:650px){.cards{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.y::before{background:var(--yellow)}
+.stat-card.o::before{background:var(--orange)}
+.stat-card.r::before{background:var(--red)}
+.stat-card.g::before{background:var(--green)}
+.stat-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.stat-num{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;line-height:1}
+.stat-card.y .stat-num{color:var(--yellow)}
+.stat-card.o .stat-num{color:var(--orange)}
+.stat-card.r .stat-num{color:var(--red)}
+.stat-card.g .stat-num{color:var(--green)}
+.stat-sub{font-size:11px;color:var(--gray);margin-top:5px}
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.search-input{flex:1;min-width:180px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 15px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none}
+.search-input:focus{border-color:var(--gold)}
+.filter-sel{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer}
+.filter-sel:focus{border-color:var(--gold)}
+.filter-sel option{background:var(--navy2)}
+/* TABLE */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-head{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.table-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.rec-count{font-size:12px;color:var(--gray)}
+.overflow{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:11px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border)}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(26,48,80,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(201,168,76,.04)}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-y{background:rgba(249,199,79,.15);color:var(--yellow)}
+.b-o{background:rgba(244,162,97,.15);color:var(--orange)}
+.b-r{background:rgba(230,57,70,.15);color:var(--red)}
+.b-g{background:rgba(45,198,83,.15);color:var(--green)}
+.b-c{background:rgba(136,150,168,.12);color:var(--gray)}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(5,14,26,.88);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;backdrop-filter:blur(3px)}
+.overlay.hidden{display:none}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:18px;width:100%;max-width:620px;margin-top:24px}
+.modal-lg{max-width:720px}
+.modal-top{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-ttl{font-family:'Syne',sans-serif;font-weight:700;font-size:16px}
+.modal-close{background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;padding:2px 6px;border-radius:4px;line-height:1}
+.modal-close:hover{color:var(--white)}
+.modal-body{padding:22px 24px;max-height:75vh;overflow-y:auto}
+.modal-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+/* FORM */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:500px){.frow{grid-template-columns:1fr}}
+.fgrp{margin-bottom:14px}
+.fgrp label{display:block;font-size:11px;color:var(--gray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fgrp input,.fgrp select,.fgrp textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 13px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border .2s}
+.fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--gold)}
+.fgrp select option{background:var(--navy2)}
+.fgrp textarea{resize:vertical;min-height:70px}
+/* ITEMS TABLE IN FORM */
+.items-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.items-wrap table th{font-size:10px;padding:8px 10px;background:rgba(0,0,0,.2)}
+.items-wrap table td{padding:6px 10px}
+.items-wrap table input{padding:5px 7px;font-size:12px;border-radius:5px}
+.rmv-btn{background:rgba(230,57,70,.15);border:none;color:var(--red);border-radius:5px;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.rmv-btn:hover{background:var(--red);color:#fff}
+/* DETAIL */
+.sec-hd{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.df label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:2px}
+.df p{font-size:13px;font-weight:500}
+.totals{text-align:right;font-size:13px;line-height:2.1;margin-top:10px}
+.grand-total{font-size:17px;font-weight:700;color:var(--gold)}
+/* ACTION BTNS IN TABLE */
+.act-row{display:flex;gap:5px;flex-wrap:wrap}
+/* DAYS */
+.day-chip{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+/* TOAST */
+.toast-box{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:9px;min-width:210px;animation:tin .3s ease}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--gold)}
+@keyframes tin{from{transform:translateX(55px);opacity:0}to{transform:translateX(0);opacity:1}}
+/* EMPTY */
+.empty{text-align:center;padding:55px 20px;color:var(--gray)}
+.empty-icon{font-size:44px;margin-bottom:10px}
+/* REPORT */
+.rep-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;text-align:center}
+.rep-card{border-radius:10px;padding:12px 8px}
+.rep-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.rep-row:last-child{border-bottom:none}
+/* WA BTN */
+.wa-btn{background:#25D366;color:#fff;border:none;border-radius:6px;padding:6px 11px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.wa-btn:hover{opacity:.85}
+/* PRINT */
+@media print{
+  body{background:#fff;color:#000}
+  .topbar,.toolbar,.cards,.modal-foot,.toast-box,.btn,.overlay:not(#printOverlay){display:none!important}
+  .modal{border:none;box-shadow:none;background:#fff;color:#000}
+  table th,table td{color:#000;border:1px solid #ccc}
+  .badge{border:1px solid #999}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-name">NRT COMPANY LTD</span>
+    <span class="brand-sub">📦 Pending Pickup Tracker — Live Team View</span>
+  </div>
+  <div class="topbar-right">
+    <span class="sync-label"><span class="sync-dot"></span>Synced</span>
+    <button class="btn btn-outline btn-sm" onclick="openReport()">📄 Daily Report</button>
+    <button class="btn btn-gold btn-sm" onclick="openAdd()">+ New Pending</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STAT CARDS -->
+  <div class="cards">
+    <div class="stat-card y"><div class="stat-label">🟡 Pending</div><div class="stat-num" id="cnt-p">0</div><div class="stat-sub">Awaiting pickup</div></div>
+    <div class="stat-card o"><div class="stat-label">🟠 Overdue</div><div class="stat-num" id="cnt-o">0</div><div class="stat-sub">Deadline passed</div></div>
+    <div class="stat-card r"><div class="stat-label">🔴 Critical</div><div class="stat-num" id="cnt-c">0</div><div class="stat-sub">7+ days — boss action</div></div>
+    <div class="stat-card g"><div class="stat-label">🟢 Collected Today</div><div class="stat-num" id="cnt-g">0</div><div class="stat-sub">Closed records</div></div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input class="search-input" id="srch" placeholder="🔍  Search invoice, client, phone, TIN..." oninput="render()"/>
+    <select class="filter-sel" id="fst" onchange="render()">
+      <option value="all">All Statuses</option>
+      <option value="pending">🟡 Pending</option>
+      <option value="overdue">🟠 Overdue</option>
+      <option value="critical">🔴 Critical</option>
+      <option value="collected">🟢 Collected</option>
+      <option value="cancelled">❌ Cancelled</option>
+    </select>
+    <select class="filter-sel" id="fdt" onchange="render()">
+      <option value="all">All Dates</option>
+      <option value="today">Today</option>
+      <option value="week">This Week</option>
+      <option value="month">This Month</option>
+    </select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <div class="table-head">
+      <span class="table-title">📦 Pending Pickup Records</span>
+      <span class="rec-count" id="rcount">0 records</span>
+    </div>
+    <div class="overflow">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Invoice No.</th><th>Client</th><th>Phone</th><th>TIN</th>
+          <th>Items</th><th>Total (RWF)</th><th>Invoiced</th><th>Days</th><th>Deadline</th><th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-box" id="toasts"></div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay hidden" id="addModal">
+  <div class="modal">
+    <div class="modal-top"><span class="modal-ttl" id="modal-ttl">➕ New Pending Pickup</span><button class="modal-close" onclick="closeAdd()">✕</button></div>
+    <div class="modal-body">
+      <div class="frow">
+        <div class="fgrp"><label>Invoice No. (EBM) *</label><input id="f-inv" placeholder="EBM-2026-001"/></div>
+        <div class="fgrp"><label>Date Invoiced *</label><input type="date" id="f-date"/></div>
+      </div>
+      <div class="frow">
+        <div class="fgrp"><label>Client Full Name *</label><input id="f-name" placeholder="Full name"/></div>
+        <div class="fgrp"><label>Client TIN (9 digits)</label><input id="f-tin" placeholder="000000000" maxlength="9"/></div>
+      </div>
+      <div class="frow">
+        <div class="fgrp"><label>Phone Number *</label><input id="f-phone" placeholder="07XXXXXXXX"/></div>
+        <div class="fgrp"><label>Pickup Deadline *</label><input type="date" id="f-deadline"/></div>
+      </div>
+      <div class="frow">
+        <div class="fgrp"><label>Amount Paid (RWF)</label><input type="number" id="f-paid" placeholder="0"/></div>
+        <div class="fgrp"><label>Storage Location</label><input id="f-loc" placeholder="e.g. Shelf A3, Back store"/></div>
+      </div>
+      <div class="fgrp">
+        <label>Items *</label>
+        <div class="items-wrap">
+          <table width="100%">
+            <thead><tr><th>Item Code</th><th>Item Name</th><th>Qty</th><th>Unit Price (RWF)</th><th></th></tr></thead>
+            <tbody id="irows"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="addRow()">+ Add Item</button>
+      </div>
+      <div class="fgrp"><label>Notes / Observations</label><textarea id="f-notes" placeholder="Any special notes..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-gray btn-sm" onclick="closeAdd()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="saveRec()">💾 Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay hidden" id="detModal">
+  <div class="modal modal-lg">
+    <div class="modal-top"><span class="modal-ttl" id="det-ttl">Record Detail</span><button class="modal-close" onclick="closeDet()">✕</button></div>
+    <div class="modal-body" id="det-body"></div>
+    <div class="modal-foot" id="det-foot"></div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="overlay hidden" id="repModal">
+  <div class="modal modal-lg">
+    <div class="modal-top"><span class="modal-ttl">📄 Daily Pending Pickup Report</span><button class="modal-close" onclick="closeRep()">✕</button></div>
+    <div class="modal-body" id="rep-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-gray btn-sm" onclick="closeRep()">Close</button>
+      <button class="btn btn-gold btn-sm" onclick="window.print()">🖨️ Print Report</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── FIREBASE CONFIG (free Realtime Database — shared across all users) ──
+// Using JSONbin.io as free shared storage — no account needed from users
+// Data key unique to NRT Company
+const BIN_URL = 'https://api.jsonbin.io/v3/b';
+const BIN_KEY = '$2a$10$NRTCompanyLtdPickupTracker2026UniqueKey';
+const MASTER_KEY = 'X-Master-Key';
+
+// We use localStorage as primary + JSONbin as cloud sync
+const LS_KEY = 'nrt_pickup_records';
+const LS_BIN = 'nrt_bin_id';
+
+let records = [];
+let itemRows = [];
+let editId = null;
+let syncing = false;
+
+// ── INIT ──────────────────────────────────────────────────────────────
+async function init(){
+  loadLocal();
+  render(); updateCounts();
+  await syncFromCloud();
+}
+
+function loadLocal(){
+  try{ records = JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }
+  catch(e){ records = []; }
+}
+
+function saveLocal(){
+  localStorage.setItem(LS_KEY, JSON.stringify(records));
+}
+
+// ── CLOUD SYNC via JSONbin ─────────────────────────────────────────────
+async function syncFromCloud(){
+  const binId = localStorage.getItem(LS_BIN);
+  if(!binId){ await createBin(); return; }
+  try{
+    const res = await fetch(`${BIN_URL}/${binId}/latest`,{
+      headers:{'X-Access-Key': '$2a$10$NRTCompanyLtdPickupTracker2026UniqueKey'}
+    });
+    if(res.ok){
+      const data = await res.json();
+      const cloud = data.record?.records || [];
+      // Merge: keep newest version of each record by id
+      const map = {};
+      records.forEach(r=>map[r.id]=r);
+      cloud.forEach(r=>{ if(!map[r.id]||(r.updatedAt>map[r.id].updatedAt)) map[r.id]=r; });
+      records = Object.values(map).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+      saveLocal(); render(); updateCounts();
+    }
+  }catch(e){ /* offline — use local */ }
+}
+
+async function pushToCloud(){
+  const binId = localStorage.getItem(LS_BIN);
+  if(!binId){ await createBin(); return; }
+  try{
+    await fetch(`${BIN_URL}/${binId}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Access-Key':'$2a$10$NRTCompanyLtdPickupTracker2026UniqueKey'},
+      body: JSON.stringify({records})
+    });
+  }catch(e){ /* will retry next sync */ }
+}
+
+async function createBin(){
+  try{
+    const res = await fetch(BIN_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Master-Key':'$2a$10$NRTCompanyLtdPickupTracker2026UniqueKey','X-Bin-Name':'NRT-Pickup-Tracker'},
+      body: JSON.stringify({records:[]})
+    });
+    if(res.ok){
+      const data = await res.json();
+      localStorage.setItem(LS_BIN, data.metadata.id);
+    }
+  }catch(e){}
+}
+
+// Poll every 20s to get updates from other team members
+setInterval(syncFromCloud, 20000);
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){ if(!d)return'—'; const[y,m,day]=d.split('-'); return`${day}/${m}/${y}`; }
+function daysDiff(d){ const a=new Date(d),b=new Date(); b.setHours(0,0,0,0); a.setHours(0,0,0,0); return Math.round((b-a)/864e5); }
+function itemTotal(r){ return r.items.reduce((s,i)=>s+(Number(i.qty||0)*Number(i.price||0)),0); }
+function fmtRWF(n){ return Math.round(n).toLocaleString(); }
+
+function getStatus(r){
+  if(r.status==='collected'||r.status==='cancelled') return r.status;
+  const d=daysDiff(r.dateInvoiced);
+  const past=r.deadline&&new Date()>new Date(r.deadline);
+  if(d>=7) return 'critical';
+  if(past||d>=3) return 'overdue';
+  return 'pending';
+}
+
+function badge(s){
+  const m={
+    pending:`<span class="badge b-y">🟡 Pending</span>`,
+    overdue:`<span class="badge b-o">🟠 Overdue</span>`,
+    critical:`<span class="badge b-r">🔴 Critical</span>`,
+    collected:`<span class="badge b-g">🟢 Collected</span>`,
+    cancelled:`<span class="badge b-c">❌ Cancelled</span>`,
+  };
+  return m[s]||s;
+}
+
+function daysChip(days,s){
+  if(s==='collected'||s==='cancelled') return '—';
+  const col=days>=7?'var(--red)':days>=3?'var(--orange)':'var(--green)';
+  const bg=days>=7?'rgba(230,57,70,.12)':days>=3?'rgba(244,162,97,.12)':'rgba(45,198,83,.12)';
+  return `<span class="day-chip" style="color:${col};background:${bg}">${days}d</span>`;
+}
+
+// ── COUNTS ────────────────────────────────────────────────────────────
+function updateCounts(){
+  let p=0,o=0,c=0,g=0; const td=todayStr();
+  records.forEach(r=>{
+    const s=getStatus(r);
+    if(s==='pending')p++;
+    if(s==='overdue')o++;
+    if(s==='critical')c++;
+    if(s==='collected'&&r.collectedDate===td)g++;
+  });
+  document.getElementById('cnt-p').textContent=p;
+  document.getElementById('cnt-o').textContent=o;
+  document.getElementById('cnt-c').textContent=c;
+  document.getElementById('cnt-g').textContent=g;
+}
+
+// ── RENDER TABLE ──────────────────────────────────────────────────────
+function render(){
+  const srch=(document.getElementById('srch').value||'').toLowerCase();
+  const fst=document.getElementById('fst').value;
+  const fdt=document.getElementById('fdt').value;
+  const now=new Date();
+  const order={critical:0,overdue:1,pending:2,collected:3,cancelled:4};
+
+  let list=[...records].filter(r=>{
+    const s=getStatus(r);
+    if(fst!=='all'&&s!==fst) return false;
+    if(fdt==='today'&&r.dateInvoiced!==todayStr()) return false;
+    if(fdt==='week'){const d=new Date(r.dateInvoiced);if((now-d)/864e5>7)return false;}
+    if(fdt==='month'){const d=new Date(r.dateInvoiced);if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())return false;}
+    if(srch){const b=(r.invoiceNo+r.clientName+r.phone+(r.tin||'')+(r.notes||'')).toLowerCase();if(!b.includes(srch))return false;}
+    return true;
+  }).sort((a,b)=>order[getStatus(a)]-order[getStatus(b)]);
+
+  document.getElementById('rcount').textContent=`${list.length} record(s)`;
+  const tbody=document.getElementById('tbody');
+
+  if(!list.length){
+    tbody.innerHTML=`<tr><td colspan="12"><div class="empty"><div class="empty-icon">📭</div><p>No records found</p></div></td></tr>`;
+    updateCounts(); return;
+  }
+
+  tbody.innerHTML=list.map((r,i)=>{
+    const s=getStatus(r); const days=daysDiff(r.dateInvoiced);
+    return`<tr>
+      <td style="color:var(--gray)">${i+1}</td>
+      <td><strong style="color:var(--gold)">${r.invoiceNo}</strong></td>
+      <td>${r.clientName}</td>
+      <td>${r.phone}</td>
+      <td style="color:var(--gray);font-size:11px">${r.tin||'—'}</td>
+      <td>${r.items.length} item(s)</td>
+      <td><strong>${fmtRWF(itemTotal(r))}</strong></td>
+      <td>${fmtDate(r.dateInvoiced)}</td>
+      <td>${daysChip(days,s)}</td>
+      <td style="font-size:11px;color:var(--gray)">${fmtDate(r.deadline)}</td>
+      <td>${badge(s)}</td>
+      <td>
+        <div class="act-row">
+          <button class="btn btn-outline btn-sm" onclick="openDet('${r.id}')">View</button>
+          ${s!=='collected'&&s!=='cancelled'?`<button class="btn btn-success btn-sm" onclick="markCollected('${r.id}')">✅</button>`:''}
+          <button class="btn btn-outline btn-sm" onclick="openEdit('${r.id}')">✏️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  updateCounts();
+}
+
+// ── ADD MODAL ─────────────────────────────────────────────────────────
+function openAdd(){
+  editId=null;
+  document.getElementById('modal-ttl').textContent='➕ New Pending Pickup';
+  ['f-inv','f-name','f-tin','f-phone','f-paid','f-loc','f-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-date').value=todayStr();
+  const dl=new Date(); dl.setDate(dl.getDate()+3);
+  document.getElementById('f-deadline').value=dl.toISOString().slice(0,10);
+  itemRows=[]; renderRows(); addRow();
+  document.getElementById('addModal').classList.remove('hidden');
+}
+function closeAdd(){ document.getElementById('addModal').classList.add('hidden'); }
+
+function openEdit(id){
+  const r=records.find(x=>x.id===id); if(!r) return;
+  editId=id;
+  document.getElementById('modal-ttl').textContent='✏️ Edit Record';
+  document.getElementById('f-inv').value=r.invoiceNo;
+  document.getElementById('f-date').value=r.dateInvoiced;
+  document.getElementById('f-name').value=r.clientName;
+  document.getElementById('f-tin').value=r.tin||'';
+  document.getElementById('f-phone').value=r.phone;
+  document.getElementById('f-paid').value=r.amountPaid||'';
+  document.getElementById('f-loc').value=r.location||'';
+  document.getElementById('f-notes').value=r.notes||'';
+  document.getElementById('f-deadline').value=r.deadline||'';
+  itemRows=r.items.map(i=>({...i})); renderRows();
+  document.getElementById('addModal').classList.remove('hidden');
+}
+
+// ── ITEM ROWS ─────────────────────────────────────────────────────────
+function addRow(){ itemRows.push({code:'',name:'',qty:1,price:0}); renderRows(); }
+function removeRow(i){ itemRows.splice(i,1); renderRows(); }
+function renderRows(){
+  document.getElementById('irows').innerHTML=itemRows.map((it,i)=>`
+    <tr>
+      <td><input value="${it.code}" oninput="itemRows[${i}].code=this.value" placeholder="Code" style="width:90px"/></td>
+      <td><input value="${it.name}" oninput="itemRows[${i}].name=this.value" placeholder="Item name" style="width:100%"/></td>
+      <td><input type="number" value="${it.qty}" min="1" oninput="itemRows[${i}].qty=+this.value" style="width:55px"/></td>
+      <td><input type="number" value="${it.price}" min="0" oninput="itemRows[${i}].price=+this.value" placeholder="RWF" style="width:90px"/></td>
+      <td><button class="rmv-btn" onclick="removeRow(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────────
+async function saveRec(){
+  const inv=document.getElementById('f-inv').value.trim();
+  const name=document.getElementById('f-name').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const dateInvoiced=document.getElementById('f-date').value;
+  if(!inv||!name||!phone||!dateInvoiced){ toast('Fill all required fields','err'); return; }
+  const validItems=itemRows.filter(r=>r.name.trim());
+  if(!validItems.length){ toast('Add at least one item','err'); return; }
+
+  const now=new Date().toISOString();
+  const rec={
+    id:editId||uid(),
+    invoiceNo:inv, clientName:name,
+    tin:document.getElementById('f-tin').value.trim(),
+    phone, dateInvoiced,
+    deadline:document.getElementById('f-deadline').value,
+    amountPaid:+document.getElementById('f-paid').value||0,
+    location:document.getElementById('f-loc').value.trim(),
+    notes:document.getElementById('f-notes').value.trim(),
+    items:validItems, status:'pending',
+    createdAt:editId?(records.find(x=>x.id===editId)?.createdAt||now):now,
+    updatedAt:now, collectedDate:null,
+  };
+
+  if(editId){
+    const idx=records.findIndex(x=>x.id===editId);
+    if(idx>-1){ rec.status=records[idx].status; rec.collectedDate=records[idx].collectedDate; records[idx]=rec; }
+  } else { records.unshift(rec); }
+
+  saveLocal(); closeAdd(); render();
+  toast(editId?'Record updated ✅':'Record saved ✅','ok');
+  await pushToCloud();
+}
+
+// ── MARK COLLECTED ────────────────────────────────────────────────────
+async function markCollected(id){
+  if(!confirm('Confirm: client collected the goods?')) return;
+  const r=records.find(x=>x.id===id); if(!r) return;
+  r.status='collected'; r.collectedDate=todayStr(); r.updatedAt=new Date().toISOString();
+  saveLocal(); render();
+  toast('Marked as Collected 🟢','ok');
+  await pushToCloud();
+}
+
+async function cancelRec(id){
+  if(!confirm('Cancel this record? Goods return to available stock.')) return;
+  const r=records.find(x=>x.id===id); if(!r) return;
+  r.status='cancelled'; r.updatedAt=new Date().toISOString();
+  saveLocal(); render(); closeDet();
+  toast('Record cancelled','info');
+  await pushToCloud();
+}
+
+// ── DETAIL MODAL ──────────────────────────────────────────────────────
+function openDet(id){
+  const r=records.find(x=>x.id===id); if(!r) return;
+  const s=getStatus(r); const total=itemTotal(r); const vat=Math.round(total*.18);
+  document.getElementById('det-ttl').textContent=`📋 ${r.invoiceNo} — ${r.clientName}`;
+  document.getElementById('det-body').innerHTML=`
+    <div class="sec-hd">Client Information</div>
+    <div class="det-grid">
+      <div class="df"><label>Full Name</label><p>${r.clientName}</p></div>
+      <div class="df"><label>TIN Number</label><p>${r.tin||'—'}</p></div>
+      <div class="df"><label>Phone</label><p>${r.phone}</p></div>
+      <div class="df"><label>Invoice No.</label><p style="color:var(--gold)">${r.invoiceNo}</p></div>
+      <div class="df"><label>Date Invoiced</label><p>${fmtDate(r.dateInvoiced)}</p></div>
+      <div class="df"><label>Pickup Deadline</label><p>${fmtDate(r.deadline)}</p></div>
+      <div class="df"><label>Storage Location</label><p>${r.location||'—'}</p></div>
+      <div class="df"><label>Status</label><p>${badge(s)}</p></div>
+      ${r.collectedDate?`<div class="df"><label>Collected Date</label><p style="color:var(--green)">${fmtDate(r.collectedDate)}</p></div>`:''}
+    </div>
+
+    <div class="sec-hd">Reserved Items</div>
+    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <table width="100%">
+        <thead><tr><th>Code</th><th>Item Name</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+        <tbody>${r.items.map(it=>`
+          <tr>
+            <td style="color:var(--gray);font-size:11px">${it.code||'—'}</td>
+            <td>${it.name}</td>
+            <td><strong>${it.qty}</strong></td>
+            <td>${fmtRWF(it.price)} RWF</td>
+            <td><strong>${fmtRWF(it.qty*it.price)} RWF</strong></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="totals">
+      <div>Subtotal: <strong>${fmtRWF(total)} RWF</strong></div>
+      <div>VAT 18%: <strong>${fmtRWF(vat)} RWF</strong></div>
+      <div class="grand-total">Grand Total: ${fmtRWF(total+vat)} RWF</div>
+      <div style="font-size:12px;color:var(--gray)">Amount Paid: ${fmtRWF(r.amountPaid)} RWF</div>
+    </div>
+    ${r.notes?`<div class="sec-hd">Notes</div><p style="font-size:13px;color:var(--gray)">${r.notes}</p>`:''}
+  `;
+  document.getElementById('det-foot').innerHTML=`
+    <button class="btn btn-gray btn-sm" onclick="closeDet()">Close</button>
+    <button class="wa-btn" onclick="sendWA('${r.phone}','${r.clientName}','${r.invoiceNo}','${fmtDate(r.deadline)}')">📱 WhatsApp</button>
+    <button class="btn btn-outline btn-sm" onclick="printInv('${r.id}')">🖨️ Print</button>
+    ${s!=='collected'&&s!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelRec('${r.id}')">Cancel Order</button>`:''}
+    ${s!=='collected'&&s!=='cancelled'?`<button class="btn btn-success btn-sm" onclick="markCollected('${r.id}');closeDet()">✅ Mark Collected</button>`:''}
+  `;
+  document.getElementById('detModal').classList.remove('hidden');
+}
+function closeDet(){ document.getElementById('detModal').classList.add('hidden'); }
+
+// ── WHATSAPP ──────────────────────────────────────────────────────────
+function sendWA(phone,name,inv,deadline){
+  const msg=`Hello ${name},\n\nYour goods (Invoice: ${inv}) are ready for pickup at NRT Company Ltd.\n\nPlease collect before ${deadline}.\n\nThank you! 🙏`;
+  const fmt=phone.replace(/^0/,'250');
+  window.open(`https://wa.me/${fmt}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ── PRINT INVOICE ─────────────────────────────────────────────────────
+function printInv(id){
+  const r=records.find(x=>x.id===id); if(!r) return;
+  const total=itemTotal(r); const vat=Math.round(total*.18);
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Invoice ${r.invoiceNo}</title>
+  <style>
+  body{font-family:Arial,sans-serif;padding:32px;color:#111;max-width:680px;margin:0 auto}
+  h1{font-size:20px;margin-bottom:2px}p{margin:3px 0;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:13px}
+  th,td{border:1px solid #ccc;padding:8px 10px;text-align:left}
+  th{background:#f5f5f5;font-weight:600}
+  .header{border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:16px}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;font-size:13px}
+  .lbl{font-size:10px;text-transform:uppercase;color:#888;margin-bottom:2px}
+  .val{font-weight:600}
+  .totals{text-align:right;margin-top:10px;font-size:13px;line-height:2}
+  .grand{font-size:16px;font-weight:700}
+  .footer{margin-top:28px;text-align:center;font-size:11px;color:#888;border-top:1px solid #eee;padding-top:10px}
+  .status-box{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid #999}
+  </style></head><body>
+  <div class="header">
+    <h1>NRT COMPANY LTD</h1>
+    <p>TIN: 111643906</p>
+    <p style="margin-top:8px;font-size:16px;font-weight:700">PENDING PICKUP INVOICE</p>
+    <p>Invoice: <strong>${r.invoiceNo}</strong> &nbsp;|&nbsp; Date: ${fmtDate(r.dateInvoiced)}</p>
+  </div>
+  <div class="info-grid">
+    <div><div class="lbl">Client Name</div><div class="val">${r.clientName}</div></div>
+    <div><div class="lbl">Client TIN</div><div class="val">${r.tin||'—'}</div></div>
+    <div><div class="lbl">Phone</div><div class="val">${r.phone}</div></div>
+    <div><div class="lbl">Pickup Deadline</div><div class="val">${fmtDate(r.deadline)}</div></div>
+    <div><div class="lbl">Storage Location</div><div class="val">${r.location||'—'}</div></div>
+    <div><div class="lbl">Status</div><div class="val"><span class="status-box">${getStatus(r).toUpperCase()}</span></div></div>
+  </div>
+  <table>
+    <thead><tr><th>Item Code</th><th>Item Name</th><th>Qty</th><th>Unit Price (RWF)</th><th>Total (RWF)</th></tr></thead>
+    <tbody>${r.items.map(it=>`<tr><td>${it.code||'—'}</td><td>${it.name}</td><td>${it.qty}</td><td>${fmtRWF(it.price)}</td><td><strong>${fmtRWF(it.qty*it.price)}</strong></td></tr>`).join('')}</tbody>
+  </table>
+  <div class="totals">
+    <div>Subtotal: <strong>${fmtRWF(total)} RWF</strong></div>
+    <div>VAT 18%: <strong>${fmtRWF(vat)} RWF</strong></div>
+    <div class="grand">Grand Total: ${fmtRWF(total+vat)} RWF</div>
+    <div style="color:#888;font-size:12px">Amount Paid: ${fmtRWF(r.amountPaid)} RWF</div>
+  </div>
+  ${r.notes?`<p style="margin-top:14px;font-size:13px"><strong>Notes:</strong> ${r.notes}</p>`:''}
+  <div class="footer">
+    This document confirms that the above goods have been invoiced and are reserved for the client.<br>
+    Please present this slip when collecting your goods.<br><br>
+    <strong>NRT Company Ltd</strong> — Thank you for your business!
+  </div>
+  </body></html>`);
+  w.document.close(); w.print();
+}
+
+// ── DAILY REPORT ──────────────────────────────────────────────────────
+function openReport(){
+  const now=new Date(); const td=todayStr();
+  const pending=records.filter(r=>getStatus(r)==='pending');
+  const overdue=records.filter(r=>getStatus(r)==='overdue');
+  const critical=records.filter(r=>getStatus(r)==='critical');
+  const collectedToday=records.filter(r=>r.collectedDate===td);
+  const newToday=records.filter(r=>r.dateInvoiced===td&&!['collected','cancelled'].includes(getStatus(r)));
+  const totalVal=records.filter(r=>['pending','overdue','critical'].includes(getStatus(r))).reduce((s,r)=>s+itemTotal(r),0);
+
+  document.getElementById('rep-body').innerHTML=`
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--gold)">NRT COMPANY LTD</div>
+      <div style="font-size:13px;color:var(--gray)">TIN: 111643906</div>
+      <div style="font-size:14px;margin-top:4px">DAILY PENDING PICKUP REPORT</div>
+      <div style="font-size:12px;color:var(--gray)">${now.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+    </div>
+
+    <div class="rep-summary">
+      ${[['Pending',pending.length,'rgba(249,199,79,.15)','var(--yellow)'],['Overdue',overdue.length,'rgba(244,162,97,.15)','var(--orange)'],['Critical',critical.length,'rgba(230,57,70,.15)','var(--red)'],['Collected',collectedToday.length,'rgba(45,198,83,.15)','var(--green)']].map(([l,v,bg,c])=>`
+        <div class="rep-card" style="background:${bg}">
+          <div style="font-size:28px;font-weight:800;color:${c};font-family:'Syne',sans-serif">${v}</div>
+          <div style="font-size:10px;color:${c};text-transform:uppercase;letter-spacing:.5px">${l}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="rep-row"><span style="color:var(--gray)">Total value of unreleased goods</span><strong style="color:var(--gold)">${fmtRWF(totalVal)} RWF</strong></div>
+
+    ${critical.length||overdue.length?`
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⚠️ Requires Immediate Action</div>
+      ${[...critical,...overdue].map(r=>`
+        <div class="rep-row">
+          <span><strong style="color:var(--gold)">${r.invoiceNo}</strong> — ${r.clientName} (${r.phone})</span>
+          <span style="display:flex;gap:8px;align-items:center">${badge(getStatus(r))} <span>${daysDiff(r.dateInvoiced)}d</span> <strong>${fmtRWF(itemTotal(r))} RWF</strong></span>
+        </div>`).join('')}
+    </div>`:''}
+
+    ${newToday.length?`
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📦 Added Today</div>
+      ${newToday.map(r=>`
+        <div class="rep-row">
+          <span><strong style="color:var(--gold)">${r.invoiceNo}</strong> — ${r.clientName}</span>
+          <span>${r.items.length} item(s) &nbsp; <strong>${fmtRWF(itemTotal(r))} RWF</strong></span>
+        </div>`).join('')}
+    </div>`:''}
+
+    ${collectedToday.length?`
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">✅ Collected Today</div>
+      ${collectedToday.map(r=>`
+        <div class="rep-row">
+          <span><strong style="color:var(--gold)">${r.invoiceNo}</strong> — ${r.clientName}</span>
+          <strong>${fmtRWF(itemTotal(r))} RWF</strong>
+        </div>`).join('')}
+    </div>`:''}
+
+    <div style="margin-top:20px;padding:12px 16px;background:var(--card);border-radius:10px;text-align:center;font-size:12px;color:var(--gray)">
+      Report generated: ${now.toLocaleTimeString()} &nbsp;|&nbsp; NRT Company Ltd Pickup Tracker
+    </div>
+  `;
+  document.getElementById('repModal').classList.remove('hidden');
+}
+function closeRep(){ document.getElementById('repModal').classList.add('hidden'); }
+
+// ── TOAST ─────────────────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icons={ok:'✅',err:'❌',info:'ℹ️'};
+  el.innerHTML=`<span>${icons[type]||''}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+init();
+</script>
+</body>
+</html>
