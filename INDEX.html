@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pending Pickup Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#050E1A;
+  --navy2:#0a1929;
+  --gold:#C9A84C;
+  --gold2:#e8c76a;
+  --red:#e63946;
+  --orange:#f4a261;
+  --yellow:#f9c74f;
+  --green:#2dc653;
+  --white:#ffffff;
+  --gray:#8896a8;
+  --card:#0d1f35;
+  --border:#1a3050;
+}
+body{background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* TOP BAR */
+.topbar{background:var(--navy2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--gold);letter-spacing:1px;}
+.logo span{color:var(--white);}
+.topbar-right{display:flex;gap:10px;align-items:center;}
+.btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;transition:all .2s;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-gold:hover{background:var(--gold2);}
+.btn-outline{background:transparent;color:var(--gold);border:1.5px solid var(--gold);}
+.btn-outline:hover{background:var(--gold);color:var(--navy);}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-danger:hover{opacity:.85;}
+.btn-success{background:var(--green);color:var(--navy);}
+.btn-success:hover{opacity:.85;}
+.btn-gray{background:var(--border);color:var(--gray);}
+
+/* MAIN */
+.main{max-width:1200px;margin:0 auto;padding:28px 20px;}
+
+/* SUMMARY CARDS */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr);}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.card.yellow::before{background:var(--yellow);}
+.card.orange::before{background:var(--orange);}
+.card.red::before{background:var(--red);}
+.card.green::before{background:var(--green);}
+.card-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.card-number{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1;}
+.card.yellow .card-number{color:var(--yellow);}
+.card.orange .card-number{color:var(--orange);}
+.card.red .card-number{color:var(--red);}
+.card.green .card-number{color:var(--green);}
+.card-sub{font-size:12px;color:var(--gray);margin-top:6px;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.search-box{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;}
+.search-box:focus{border-color:var(--gold);}
+.filter-select{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;}
+.filter-select:focus{border-color:var(--gold);}
+
+/* TABLE */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.table-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.table-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;}
+table{width:100%;border-collapse:collapse;}
+th{padding:13px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--gray);font-weight:600;border-bottom:1px solid var(--border);}
+td{padding:14px 16px;font-size:13px;border-bottom:1px solid rgba(26,48,80,.5);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(201,168,76,.04);}
+.overflow-x{overflow-x:auto;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-yellow{background:rgba(249,199,79,.15);color:var(--yellow);}
+.badge-orange{background:rgba(244,162,97,.15);color:var(--orange);}
+.badge-red{background:rgba(230,57,70,.15);color:var(--red);}
+.badge-green{background:rgba(45,198,83,.15);color:var(--green);}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
+.dot-yellow{background:var(--yellow);}
+.dot-orange{background:var(--orange);}
+.dot-red{background:var(--red);}
+.dot-green{background:var(--green);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,14,26,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:18px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:22px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;}
+.modal-close{background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px;}
+.modal-close:hover{color:var(--white);}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:500px){.form-row{grid-template-columns:1fr;}}
+.form-group{margin-bottom:16px;}
+.form-group.full{grid-column:1/-1;}
+label{display:block;font-size:12px;color:var(--gray);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;}
+input,select,textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+select option{background:var(--navy2);}
+textarea{resize:vertical;min-height:80px;}
+.items-table-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px;}
+.items-table-wrap table th{font-size:10px;padding:8px 12px;}
+.items-table-wrap table td{padding:8px 12px;font-size:13px;}
+.add-item-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;}
+@media(max-width:500px){.add-item-row{grid-template-columns:1fr 1fr;}}
+.add-item-row input,
+.add-item-row select{margin-bottom:0;}
+.remove-btn{background:rgba(230,57,70,.15);border:none;color:var(--red);border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.remove-btn:hover{background:var(--red);color:#fff;}
+
+/* DETAIL VIEW */
+.detail-section{margin-bottom:20px;}
+.detail-section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.detail-field label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;display:block;}
+.detail-field p{font-size:14px;font-weight:500;}
+
+/* PRINT */
+@media print{
+  body{background:#fff;color:#000;}
+  .topbar,.toolbar,.cards,.btn,.modal-footer,.no-print{display:none!important;}
+  .print-area{display:block!important;}
+  .modal-overlay{position:static;background:none;backdrop-filter:none;padding:0;}
+  .modal{border:none;max-height:none;box-shadow:none;background:#fff;color:#000;}
+  table{border-collapse:collapse;}
+  th,td{border:1px solid #ddd;color:#000;}
+  .badge{border:1px solid #999;}
+}
+.print-area{display:none;}
+.print-header{text-align:center;margin-bottom:20px;}
+.print-header h1{font-size:22px;font-weight:800;}
+.print-header p{font-size:13px;color:#555;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 20px;color:var(--gray);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.empty p{font-size:15px;}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:10px;}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 18px;font-size:13px;font-weight:500;min-width:220px;animation:slideIn .3s ease;display:flex;align-items:center;gap:10px;}
+.toast.success{border-left:3px solid var(--green);}
+.toast.error{border-left:3px solid var(--red);}
+.toast.info{border-left:3px solid var(--gold);}
+@keyframes slideIn{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* DAYS COUNTER */
+.days-chip{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.days-1{background:rgba(249,199,79,.15);color:var(--yellow);}
+.days-3{background:rgba(244,162,97,.15);color:var(--orange);}
+.days-7{background:rgba(230,57,70,.15);color:var(--red);}
+
+.wa-btn{background:#25D366;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+.wa-btn:hover{opacity:.85;}
+
+.section-label{font-size:12px;font-weight:600;color:var(--gray);margin-bottom:6px;display:block;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">PICKUP<span>TRACKER</span></div>
+  <div class="topbar-right">
+    <button class="btn btn-outline btn-sm" onclick="openReportModal()">📄 Daily Report</button>
+    <button class="btn btn-gold btn-sm" onclick="openAddModal()">+ New Pending</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SUMMARY CARDS -->
+  <div class="cards">
+    <div class="card yellow">
+      <div class="card-label">🟡 Pending</div>
+      <div class="card-number" id="cnt-pending">0</div>
+      <div class="card-sub">Awaiting pickup</div>
+    </div>
+    <div class="card orange">
+      <div class="card-label">🟠 Overdue</div>
+      <div class="card-number" id="cnt-overdue">0</div>
+      <div class="card-sub">Deadline passed</div>
+    </div>
+    <div class="card red">
+      <div class="card-label">🔴 Critical</div>
+      <div class="card-number" id="cnt-critical">0</div>
+      <div class="card-sub">7+ days — boss action</div>
+    </div>
+    <div class="card green">
+      <div class="card-label">🟢 Collected Today</div>
+      <div class="card-number" id="cnt-collected">0</div>
+      <div class="card-sub">Closed records</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <input class="search-box" id="searchInput" placeholder="🔍  Search by client, invoice, phone..." oninput="renderTable()"/>
+    <select class="filter-select" id="filterStatus" onchange="renderTable()">
+      <option value="all">All Statuses</option>
+      <option value="pending">🟡 Pending</option>
+      <option value="overdue">🟠 Overdue</option>
+      <option value="critical">🔴 Critical</option>
+      <option value="collected">🟢 Collected</option>
+      <option value="cancelled">❌ Cancelled</option>
+    </select>
+    <select class="filter-select" id="filterDate" onchange="renderTable()">
+      <option value="all">All Dates</option>
+      <option value="today">Today</option>
+      <option value="week">This Week</option>
+      <option value="month">This Month</option>
+    </select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <div class="table-head">
+      <span class="table-title">📦 Pending Pickup Records</span>
+      <span id="record-count" style="font-size:12px;color:var(--gray);"></span>
+    </div>
+    <div class="overflow-x">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Invoice No.</th>
+            <th>Client</th>
+            <th>Phone</th>
+            <th>TIN</th>
+            <th>Items</th>
+            <th>Total (RWF)</th>
+            <th>Date Invoiced</th>
+            <th>Days Waiting</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay hidden" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">➕ New Pending Pickup</span>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Invoice Number (EBM) *</label>
+          <input id="f-invoice" placeholder="e.g. EBM-2026-001"/>
+        </div>
+        <div class="form-group">
+          <label>Date Invoiced *</label>
+          <input type="date" id="f-date"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client Full Name *</label>
+          <input id="f-name" placeholder="Full name"/>
+        </div>
+        <div class="form-group">
+          <label>Client TIN (9 digits) *</label>
+          <input id="f-tin" placeholder="000000000" maxlength="9"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input id="f-phone" placeholder="07XXXXXXXX"/>
+        </div>
+        <div class="form-group">
+          <label>Pickup Deadline *</label>
+          <input type="date" id="f-deadline"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount Paid (RWF)</label>
+          <input type="number" id="f-paid" placeholder="0"/>
+        </div>
+        <div class="form-group">
+          <label>Storage Location in Shop</label>
+          <input id="f-location" placeholder="e.g. Shelf A3, Back store"/>
+        </div>
+      </div>
+
+      <!-- ITEMS -->
+      <div class="form-group">
+        <label>Items *</label>
+        <div class="items-table-wrap" id="itemsTableWrap">
+          <table width="100%">
+            <thead><tr><th>Item Code</th><th>Item Name</th><th>Qty</th><th>Unit Price (RWF)</th><th></th></tr></thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addItemRow()">+ Add Item</button>
+      </div>
+
+      <div class="form-group">
+        <label>Notes / Observations</label>
+        <textarea id="f-notes" placeholder="Any special notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray btn-sm" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="saveRecord()">💾 Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <span class="modal-title" id="detailTitle">📋 Record Detail</span>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer no-print" id="detailFooter"></div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay hidden" id="reportModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <span class="modal-title">📄 Daily Pending Pickup Report</span>
+      <button class="modal-close" onclick="closeReportModal()">✕</button>
+    </div>
+    <div class="modal-body" id="reportBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-gray btn-sm" onclick="closeReportModal()">Close</button>
+      <button class="btn btn-gold btn-sm" onclick="window.print()">🖨️ Print Report</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STORAGE ───────────────────────────────────────────────────────────
+const KEY = 'pickup_records';
+let records = JSON.parse(localStorage.getItem(KEY)||'[]');
+let editId = null;
+let itemRows = [];
+
+function save(){localStorage.setItem(KEY,JSON.stringify(records));}
+
+// ─── UTILS ─────────────────────────────────────────────────────────────
+function today(){return new Date().toISOString().slice(0,10);}
+function formatDate(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
+function daysDiff(dateStr){
+  const d=new Date(dateStr);const now=new Date();
+  now.setHours(0,0,0,0);d.setHours(0,0,0,0);
+  return Math.floor((now-d)/(1000*60*60*24));
+}
+function computeStatus(r){
+  if(r.status==='collected'||r.status==='cancelled')return r.status;
+  const days=daysDiff(r.dateInvoiced);
+  const deadlinePassed=r.deadline&&new Date()>new Date(r.deadline);
+  if(days>=7)return'critical';
+  if(deadlinePassed||days>=3)return'overdue';
+  return'pending';
+}
+function fmtRWF(n){return Number(n||0).toLocaleString();}
+function itemTotal(r){return r.items.reduce((s,i)=>s+(i.qty*i.price),0);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+
+function statusBadge(s){
+  const map={
+    pending:`<span class="badge badge-yellow"><span class="dot dot-yellow"></span>Pending</span>`,
+    overdue:`<span class="badge badge-orange"><span class="dot dot-orange"></span>Overdue</span>`,
+    critical:`<span class="badge badge-red"><span class="dot dot-red"></span>Critical</span>`,
+    collected:`<span class="badge badge-green"><span class="dot dot-green"></span>Collected</span>`,
+    cancelled:`<span class="badge" style="background:rgba(136,150,168,.15);color:var(--gray)">❌ Cancelled</span>`,
+  };
+  return map[s]||s;
+}
+function daysChip(days,status){
+  if(status==='collected'||status==='cancelled')return'—';
+  let cls='days-1';
+  if(days>=7)cls='days-7';
+  else if(days>=3)cls='days-3';
+  return`<span class="days-chip ${cls}">${days}d</span>`;
+}
+
+// ─── COUNTS ────────────────────────────────────────────────────────────
+function updateCounts(){
+  let pending=0,overdue=0,critical=0,collected=0;
+  const todayStr=today();
+  records.forEach(r=>{
+    const s=computeStatus(r);
+    if(s==='pending')pending++;
+    else if(s==='overdue')overdue++;
+    else if(s==='critical')critical++;
+    if(s==='collected'&&r.collectedDate===todayStr)collected++;
+  });
+  document.getElementById('cnt-pending').textContent=pending;
+  document.getElementById('cnt-overdue').textContent=overdue;
+  document.getElementById('cnt-critical').textContent=critical;
+  document.getElementById('cnt-collected').textContent=collected;
+}
+
+// ─── RENDER TABLE ──────────────────────────────────────────────────────
+function renderTable(){
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  const filterStatus=document.getElementById('filterStatus').value;
+  const filterDate=document.getElementById('filterDate').value;
+  const now=new Date();
+
+  let filtered=records.filter(r=>{
+    const s=computeStatus(r);
+    if(filterStatus!=='all'&&s!==filterStatus)return false;
+    if(filterDate==='today'){if(r.dateInvoiced!==today())return false;}
+    else if(filterDate==='week'){
+      const d=new Date(r.dateInvoiced);
+      const diff=(now-d)/(1000*60*60*24);
+      if(diff>7)return false;
+    }else if(filterDate==='month'){
+      const d=new Date(r.dateInvoiced);
+      if(d.getMonth()!==now.getMonth()||d.getFullYear()!==now.getFullYear())return false;
+    }
+    if(search){
+      const blob=(r.clientName+r.invoiceNo+r.phone+r.tin+r.notes).toLowerCase();
+      if(!blob.includes(search))return false;
+    }
+    return true;
+  });
+
+  // Sort: critical > overdue > pending > collected
+  const order={critical:0,overdue:1,pending:2,collected:3,cancelled:4};
+  filtered.sort((a,b)=>order[computeStatus(a)]-order[computeStatus(b)]);
+
+  document.getElementById('record-count').textContent=`${filtered.length} record(s)`;
+
+  const tbody=document.getElementById('tableBody');
+  if(filtered.length===0){
+    tbody.innerHTML=`<tr><td colspan="12"><div class="empty"><div class="empty-icon">📭</div><p>No records found</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=filtered.map((r,i)=>{
+    const s=computeStatus(r);
+    const days=daysDiff(r.dateInvoiced);
+    const total=itemTotal(r);
+    return`<tr>
+      <td style="color:var(--gray)">${i+1}</td>
+      <td><strong style="color:var(--gold)">${r.invoiceNo}</strong></td>
+      <td>${r.clientName}</td>
+      <td><a href="tel:${r.phone}" style="color:var(--white);text-decoration:none">${r.phone}</a></td>
+      <td style="color:var(--gray);font-size:12px">${r.tin||'—'}</td>
+      <td>${r.items.length} item(s)</td>
+      <td><strong>${fmtRWF(total)}</strong></td>
+      <td>${formatDate(r.dateInvoiced)}</td>
+      <td>${daysChip(days,s)}</td>
+      <td style="font-size:12px;color:var(--gray)">${formatDate(r.deadline)}</td>
+      <td>${statusBadge(s)}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="openDetail('${r.id}')">View</button>
+          ${s!=='collected'&&s!=='cancelled'?`<button class="btn btn-success btn-sm" onclick="markCollected('${r.id}')">✅</button>`:''}
+          <button class="btn btn-outline btn-sm" onclick="openEdit('${r.id}')">✏️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateCounts();
+}
+
+// ─── ADD MODAL ─────────────────────────────────────────────────────────
+function openAddModal(){
+  editId=null;
+  document.getElementById('modalTitle').textContent='➕ New Pending Pickup';
+  document.getElementById('f-invoice').value='';
+  document.getElementById('f-date').value=today();
+  document.getElementById('f-name').value='';
+  document.getElementById('f-tin').value='';
+  document.getElementById('f-phone').value='';
+  document.getElementById('f-paid').value='';
+  document.getElementById('f-location').value='';
+  document.getElementById('f-notes').value='';
+  // default deadline = 3 days
+  const dl=new Date();dl.setDate(dl.getDate()+3);
+  document.getElementById('f-deadline').value=dl.toISOString().slice(0,10);
+  itemRows=[];
+  renderItemRows();
+  addItemRow();
+  document.getElementById('addModal').classList.remove('hidden');
+}
+function closeAddModal(){document.getElementById('addModal').classList.add('hidden');}
+
+function openEdit(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  editId=id;
+  document.getElementById('modalTitle').textContent='✏️ Edit Record';
+  document.getElementById('f-invoice').value=r.invoiceNo;
+  document.getElementById('f-date').value=r.dateInvoiced;
+  document.getElementById('f-name').value=r.clientName;
+  document.getElementById('f-tin').value=r.tin||'';
+  document.getElementById('f-phone').value=r.phone;
+  document.getElementById('f-paid').value=r.amountPaid||'';
+  document.getElementById('f-location').value=r.location||'';
+  document.getElementById('f-notes').value=r.notes||'';
+  document.getElementById('f-deadline').value=r.deadline||'';
+  itemRows=r.items.map(i=>({...i}));
+  renderItemRows();
+  document.getElementById('addModal').classList.remove('hidden');
+}
+
+// ─── ITEM ROWS ─────────────────────────────────────────────────────────
+function addItemRow(){
+  itemRows.push({code:'',name:'',qty:1,price:0});
+  renderItemRows();
+}
+function removeItemRow(i){
+  itemRows.splice(i,1);
+  renderItemRows();
+}
+function renderItemRows(){
+  const tbody=document.getElementById('itemsBody');
+  tbody.innerHTML=itemRows.map((it,i)=>`
+    <tr>
+      <td><input placeholder="Item code" value="${it.code}" oninput="itemRows[${i}].code=this.value" style="padding:6px 8px;font-size:12px"/></td>
+      <td><input placeholder="Item name" value="${it.name}" oninput="itemRows[${i}].name=this.value" style="padding:6px 8px;font-size:12px"/></td>
+      <td><input type="number" min="1" value="${it.qty}" oninput="itemRows[${i}].qty=+this.value;updateRowTotal(${i})" style="padding:6px 8px;font-size:12px;width:70px"/></td>
+      <td><input type="number" min="0" value="${it.price}" oninput="itemRows[${i}].price=+this.value;updateRowTotal(${i})" style="padding:6px 8px;font-size:12px;width:110px" placeholder="RWF"/></td>
+      <td><button class="remove-btn" onclick="removeItemRow(${i})">✕</button></td>
+    </tr>
+  `).join('');
+}
+function updateRowTotal(i){/* live total update handled on save */}
+
+// ─── SAVE ──────────────────────────────────────────────────────────────
+function saveRecord(){
+  const inv=document.getElementById('f-invoice').value.trim();
+  const name=document.getElementById('f-name').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  const dateInv=document.getElementById('f-date').value;
+  const deadline=document.getElementById('f-deadline').value;
+
+  if(!inv||!name||!phone||!dateInv){toast('Please fill all required fields','error');return;}
+  if(itemRows.length===0||itemRows.every(r=>!r.name)){toast('Add at least one item','error');return;}
+
+  const validItems=itemRows.filter(r=>r.name.trim());
+
+  const rec={
+    id:editId||uid(),
+    invoiceNo:inv,
+    clientName:name,
+    tin:document.getElementById('f-tin').value.trim(),
+    phone,
+    dateInvoiced:dateInv,
+    deadline,
+    amountPaid:+document.getElementById('f-paid').value||0,
+    location:document.getElementById('f-location').value.trim(),
+    notes:document.getElementById('f-notes').value.trim(),
+    items:validItems,
+    status:'pending',
+    createdAt:new Date().toISOString(),
+    collectedDate:null,
+  };
+
+  if(editId){
+    const idx=records.findIndex(x=>x.id===editId);
+    if(idx>-1){const old=records[idx];rec.status=old.status;rec.collectedDate=old.collectedDate;records[idx]=rec;}
+  }else{
+    records.unshift(rec);
+  }
+  save();
+  closeAddModal();
+  renderTable();
+  toast(editId?'Record updated ✅':'New pending pickup saved ✅','success');
+}
+
+// ─── MARK COLLECTED ────────────────────────────────────────────────────
+function markCollected(id){
+  if(!confirm('Mark this record as COLLECTED? This means the client took the goods.'))return;
+  const r=records.find(x=>x.id===id);
+  if(r){r.status='collected';r.collectedDate=today();}
+  save();renderTable();
+  toast('Marked as Collected 🟢','success');
+}
+function markCancelled(id){
+  if(!confirm('Cancel this record? The goods will be returned to available stock.'))return;
+  const r=records.find(x=>x.id===id);
+  if(r){r.status='cancelled';}
+  save();renderTable();closeDetail();
+  toast('Record cancelled','info');
+}
+function deleteRecord(id){
+  if(!confirm('Delete this record permanently?'))return;
+  records=records.filter(x=>x.id!==id);
+  save();renderTable();closeDetail();
+  toast('Record deleted','info');
+}
+
+// ─── DETAIL MODAL ──────────────────────────────────────────────────────
+function openDetail(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  const s=computeStatus(r);
+  const total=itemTotal(r);
+  const vat=Math.round(total*0.18);
+
+  document.getElementById('detailTitle').textContent=`📋 ${r.invoiceNo} — ${r.clientName}`;
+
+  document.getElementById('detailBody').innerHTML=`
+    <div class="detail-section">
+      <div class="detail-section-title">Client Information</div>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Full Name</label><p>${r.clientName}</p></div>
+        <div class="detail-field"><label>TIN Number</label><p>${r.tin||'—'}</p></div>
+        <div class="detail-field"><label>Phone</label><p>${r.phone}</p></div>
+        <div class="detail-field"><label>Invoice Number</label><p style="color:var(--gold)">${r.invoiceNo}</p></div>
+        <div class="detail-field"><label>Date Invoiced</label><p>${formatDate(r.dateInvoiced)}</p></div>
+        <div class="detail-field"><label>Pickup Deadline</label><p>${formatDate(r.deadline)}</p></div>
+        <div class="detail-field"><label>Storage Location</label><p>${r.location||'—'}</p></div>
+        <div class="detail-field"><label>Status</label><p>${statusBadge(s)}</p></div>
+        ${r.collectedDate?`<div class="detail-field"><label>Collected Date</label><p style="color:var(--green)">${formatDate(r.collectedDate)}</p></div>`:''}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Items Reserved</div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <table width="100%">
+          <thead><tr><th>Code</th><th>Item Name</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+          <tbody>
+            ${r.items.map(it=>`
+              <tr>
+                <td style="color:var(--gray);font-size:12px">${it.code||'—'}</td>
+                <td>${it.name}</td>
+                <td><strong>${it.qty}</strong></td>
+                <td>${fmtRWF(it.price)} RWF</td>
+                <td><strong>${fmtRWF(it.qty*it.price)} RWF</strong></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;text-align:right;font-size:13px;line-height:2">
+        <div>Subtotal: <strong>${fmtRWF(total)} RWF</strong></div>
+        <div>VAT 18%: <strong>${fmtRWF(vat)} RWF</strong></div>
+        <div style="font-size:16px;color:var(--gold)">Grand Total: <strong>${fmtRWF(total+vat)} RWF</strong></div>
+        <div style="color:var(--gray)">Amount Paid: ${fmtRWF(r.amountPaid)} RWF</div>
+      </div>
+    </div>
+
+    ${r.notes?`<div class="detail-section"><div class="detail-section-title">Notes</div><p style="color:var(--gray);font-size:13px">${r.notes}</p></div>`:''}
+  `;
+
+  const footer=document.getElementById('detailFooter');
+  footer.innerHTML=`
+    <button class="btn btn-gray btn-sm" onclick="closeDetail()">Close</button>
+    <button class="wa-btn" onclick="sendWhatsApp('${r.phone}','${r.clientName}','${r.invoiceNo}','${formatDate(r.deadline)}')">📱 WhatsApp</button>
+    ${s!=='collected'&&s!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="markCancelled('${r.id}')">Cancel Order</button>`:''}
+    ${s!=='collected'&&s!=='cancelled'?`<button class="btn btn-success btn-sm" onclick="markCollected('${r.id}');closeDetail()">✅ Mark Collected</button>`:''}
+    <button class="btn btn-gold btn-sm" onclick="printInvoice('${r.id}')">🖨️ Print</button>
+  `;
+
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+function closeDetail(){document.getElementById('detailModal').classList.add('hidden');}
+
+// ─── WHATSAPP ──────────────────────────────────────────────────────────
+function sendWhatsApp(phone,name,invoice,deadline){
+  const msg=`Hello ${name}, your goods (Invoice: ${invoice}) are ready for pickup at our shop. Please collect before ${deadline}. Thank you!`;
+  const formatted=phone.replace(/^0/,'250');
+  window.open(`https://wa.me/${formatted}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ─── PRINT INVOICE ─────────────────────────────────────────────────────
+function printInvoice(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  const total=itemTotal(r);
+  const vat=Math.round(total*0.18);
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Invoice ${r.invoiceNo}</title>
+  <style>body{font-family:Arial,sans-serif;padding:30px;color:#000}h1{font-size:22px;margin-bottom:4px}
+  table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ccc;padding:8px;text-align:left}
+  th{background:#f5f5f5}.total-row{font-weight:bold}.header{text-align:center;margin-bottom:20px}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+  .label{font-size:11px;color:#888;text-transform:uppercase}.value{font-weight:600}
+  .footer{text-align:center;margin-top:30px;font-size:12px;color:#888;border-top:1px solid #eee;padding-top:12px}
+  </style></head><body>
+  <div class="header"><h1>PENDING PICKUP INVOICE</h1><p>Invoice: <strong>${r.invoiceNo}</strong> | Date: ${formatDate(r.dateInvoiced)}</p>
+  <p>TIN: 111643906</p></div>
+  <div class="info-grid">
+    <div><div class="label">Client Name</div><div class="value">${r.clientName}</div></div>
+    <div><div class="label">Client TIN</div><div class="value">${r.tin||'—'}</div></div>
+    <div><div class="label">Phone</div><div class="value">${r.phone}</div></div>
+    <div><div class="label">Pickup Deadline</div><div class="value">${formatDate(r.deadline)}</div></div>
+    <div><div class="label">Storage Location</div><div class="value">${r.location||'—'}</div></div>
+    <div><div class="label">Status</div><div class="value">${computeStatus(r).toUpperCase()}</div></div>
+  </div>
+  <table><thead><tr><th>Item Code</th><th>Item Name</th><th>Qty</th><th>Unit Price (RWF)</th><th>Total (RWF)</th></tr></thead>
+  <tbody>${r.items.map(it=>`<tr><td>${it.code||'—'}</td><td>${it.name}</td><td>${it.qty}</td><td>${fmtRWF(it.price)}</td><td>${fmtRWF(it.qty*it.price)}</td></tr>`).join('')}
+  </tbody></table>
+  <table style="width:300px;margin-left:auto"><tbody>
+    <tr><td>Subtotal</td><td><strong>${fmtRWF(total)} RWF</strong></td></tr>
+    <tr><td>VAT 18%</td><td><strong>${fmtRWF(vat)} RWF</strong></td></tr>
+    <tr class="total-row"><td>Grand Total</td><td>${fmtRWF(total+vat)} RWF</td></tr>
+    <tr><td>Amount Paid</td><td>${fmtRWF(r.amountPaid)} RWF</td></tr>
+  </tbody></table>
+  ${r.notes?`<p><strong>Notes:</strong> ${r.notes}</p>`:''}
+  <div class="footer">This document confirms goods are reserved and paid. Please present this slip when collecting.<br>Thank you for your business.</div>
+  </body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// ─── DAILY REPORT ──────────────────────────────────────────────────────
+function openReportModal(){
+  const now=new Date();
+  const todayStr=today();
+  const all=records;
+
+  const pending=all.filter(r=>computeStatus(r)==='pending');
+  const overdue=all.filter(r=>computeStatus(r)==='overdue');
+  const critical=all.filter(r=>computeStatus(r)==='critical');
+  const collectedToday=all.filter(r=>r.collectedDate===todayStr);
+  const addedToday=all.filter(r=>r.dateInvoiced===todayStr&&computeStatus(r)!=='collected');
+
+  const totalPendingValue=all.filter(r=>['pending','overdue','critical'].includes(computeStatus(r))).reduce((s,r)=>s+itemTotal(r),0);
+
+  document.getElementById('reportBody').innerHTML=`
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px">DAILY PENDING PICKUP REPORT</div>
+      <div style="color:var(--gray);font-size:13px">${now.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} | TIN: 111643906</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:20px;text-align:center">
+      <div style="background:rgba(249,199,79,.1);border:1px solid rgba(249,199,79,.3);border-radius:10px;padding:14px">
+        <div style="font-size:28px;font-weight:800;color:var(--yellow)">${pending.length}</div>
+        <div style="font-size:11px;color:var(--gray)">PENDING</div>
+      </div>
+      <div style="background:rgba(244,162,97,.1);border:1px solid rgba(244,162,97,.3);border-radius:10px;padding:14px">
+        <div style="font-size:28px;font-weight:800;color:var(--orange)">${overdue.length}</div>
+        <div style="font-size:11px;color:var(--gray)">OVERDUE</div>
+      </div>
+      <div style="background:rgba(230,57,70,.1);border:1px solid rgba(230,57,70,.3);border-radius:10px;padding:14px">
+        <div style="font-size:28px;font-weight:800;color:var(--red)">${critical.length}</div>
+        <div style="font-size:11px;color:var(--gray)">CRITICAL</div>
+      </div>
+      <div style="background:rgba(45,198,83,.1);border:1px solid rgba(45,198,83,.3);border-radius:10px;padding:14px">
+        <div style="font-size:28px;font-weight:800;color:var(--green)">${collectedToday.length}</div>
+        <div style="font-size:11px;color:var(--gray)">COLLECTED TODAY</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:6px;font-size:13px;color:var(--gray)">Total value of unreleased goods: <strong style="color:var(--gold)">${fmtRWF(totalPendingValue)} RWF</strong></div>
+
+    ${overdue.length||critical.length?`
+    <div style="margin-top:18px">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">⚠️ Requires Immediate Action</div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <table width="100%">
+          <thead><tr><th>Invoice</th><th>Client</th><th>Phone</th><th>Days</th><th>Value (RWF)</th><th>Status</th></tr></thead>
+          <tbody>
+            ${[...critical,...overdue].map(r=>`
+              <tr>
+                <td style="color:var(--gold)">${r.invoiceNo}</td>
+                <td>${r.clientName}</td>
+                <td>${r.phone}</td>
+                <td>${daysDiff(r.dateInvoiced)}d</td>
+                <td>${fmtRWF(itemTotal(r))}</td>
+                <td>${statusBadge(computeStatus(r))}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`:''}
+
+    ${addedToday.length?`
+    <div style="margin-top:18px">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;color:var(--yellow);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📦 New Today</div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <table width="100%">
+          <thead><tr><th>Invoice</th><th>Client</th><th>Phone</th><th>Items</th><th>Value (RWF)</th></tr></thead>
+          <tbody>
+            ${addedToday.map(r=>`
+              <tr>
+                <td style="color:var(--gold)">${r.invoiceNo}</td>
+                <td>${r.clientName}</td>
+                <td>${r.phone}</td>
+                <td>${r.items.length}</td>
+                <td>${fmtRWF(itemTotal(r))}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`:''}
+
+    <div style="margin-top:18px;padding:14px;background:var(--card);border-radius:10px;font-size:12px;color:var(--gray);text-align:center">
+      Report generated: ${now.toLocaleTimeString()} | Submitted by: Stock Manager
+    </div>
+  `;
+  document.getElementById('reportModal').classList.remove('hidden');
+}
+function closeReportModal(){document.getElementById('reportModal').classList.add('hidden');}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  el.innerHTML=`<span>${icons[type]||''}</span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────
+renderTable();
+updateCounts();
+</script>
+</body>
+</html>
